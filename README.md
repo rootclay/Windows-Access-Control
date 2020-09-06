@@ -1,6 +1,12 @@
+---
+description: 'https://rootclay.gitbook.io/windows-access-control/'
+---
+
 # 1. Windows访问控制模型
 
 ## 介绍
+
+**链接地址：**[**https://rootclay.gitbook.io/windows-access-control/**](https://rootclay.gitbook.io/windows-access-control/)\*\*\*\*
 
 **访问控制**是指控制谁可以访问操作系统中资源的安全功能。 应用程序调用访问控制功能来设置谁可以访问特定资源，或者控制对应用程序提供的资源的访问。
 
