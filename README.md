@@ -1,8 +1,4 @@
-# Windows访问控制模型
-
-> 原文地址：[https://docs.microsoft.com/en-us/windows/win32/secauthz/access-control](https://docs.microsoft.com/en-us/windows/win32/secauthz/access-control)
-
-\[TOC\]
+# 1. Windows访问控制模型
 
 ## 介绍
 
