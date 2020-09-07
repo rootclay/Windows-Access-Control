@@ -1,19 +1,23 @@
-# （二）安全描述符
+---
+description: 安全描述符，与被访问对象关联。由对象所有者的SID、所属组的SID、DACL、SACL、一组控制Bit组成。
+---
 
-## **安全描述符**
+# （二）安全描述符（SD）
+
+## **安全描述符\(**Security Descriptors,SD**\)**
 
 安全描述符包含与安全对象关联的安全信息。安全描述符由`SECURITY_DESCRIPTOR`结构及其关联的安全信息组成。安全描述符可以包括以下安全信息：
 
-* 对象的所有者和主要组的安全标识符（SID）
-* 指定特定用户或组允许或拒绝的访问权限的DACL
-* 一个SACL，它指定为对象生成审核记录的访问尝试的类型
+* 对象的所有者和所属组的安全标识符（SID）
+* DACL：指定特定用户或组的访问权限是否被允许或拒绝
+* SACL：为安全对象生成访问的审核记录（日志）
 * 一组控制位，用于限定安全描述符或其单个成员的含义
 
-应用程序不得直接操纵安全描述符的内容。 Windows API提供了用于在对象的安全描述符中设置和检索安全信息的功能。此外，还有用于创建和初始化新对象的安全描述符的函数。
+应用程序不能直接操纵安全描述符的内容。 Windows API提供了用于在对象的安全描述符中设置和检索安全信息的功能。此外，还有用于创建和初始化新对象的安全描述符的函数。
 
-在`Active Directory`对象上使用安全描述符的应用程序可以使用Windows安全功能或`Active Directory`服务接口（ADSI）提供的安全接口。有关ADSI安全接口的详细信息，请参阅访问控制在`Active Directory`中的工作方式：[https://docs.microsoft.com/en-us/windows/desktop/AD/how-access-control-works-in-active-directory-domain-services](https://docs.microsoft.com/en-us/windows/desktop/AD/how-access-control-works-in-active-directory-domain-services)
+在`Active Directory`对象上使用安全描述符的应用程序可以使用Windows安全功能或`Active Directory`服务接口（ADSI）提供的安全接口。有关ADSI安全接口的详细信息，参考访问控制在`Active Directory`中的工作方式：[https://docs.microsoft.com/en-us/windows/desktop/AD/how-access-control-works-in-active-directory-domain-services](https://docs.microsoft.com/en-us/windows/desktop/AD/how-access-control-works-in-active-directory-domain-services)
 
-### **安全描述符操作**
+### **如何使用API操作安全描述符**
 
 Windows API提供了用于获取和设置与安全对象关联的安全描述符的组件的功能。使用`GetSecurityInfo`和`GetNamedSecurityInfo`函数检索指向对象的安全描述符的指针。这些函数还可以检索指向安全描述符的各个组件的指针：DACL、SACL、所有者SID和主要组SID。使用`SetSecurityInfo`和`SetNamedSecurityInfo`函数来设置对象的安全描述符的组件。
 
@@ -23,7 +27,7 @@ Windows API提供了用于操纵安全描述符的组件的其他功能。有关
 
 要在安全描述符中获取控制信息，请调用`GetSecurityDescriptorControl`函数。要设置与自动ACE继承相关的控制位，请调用`SetSecurityDescriptorControl`函数。其他控制位由设置安全描述符组件的各种功能设置。例如，如果使用`SetSecurityInfo`更改对象的DACL，则该函数将适当地设置或清除位，以指示安全描述符是否具有DACL，是否为默认DACL，等等。另一个示例是安全描述符中包含的资源管理器（RM）控制位。这些位根据资源管理器的实现使用，并通过`GetSecurityDescriptorRMControl`和`SetSecurityDescriptorRMControl`函数进行访问。
 
-### **新对象的安全描述符**
+### **创建对象后的安全描述符**
 
 创建安全对象时，可以将安全描述符分配给新对象。用于创建安全对象的函数（例如`CreateFile`或`RegCreateKeyEx`）具有指向`SECURITY_ATTRIBUTES`结构的参数，该结构可以包含指向新对象的安全描述符的指针。有关构建安全描述符，然后调用`RegCreateKeyEx`将该安全描述符分配给新注册表项的示例代码，请参见在C ++中为新对象创建安全描述符。
 
@@ -70,5 +74,5 @@ _新对象的主要组_
 
 有效的功能安全描述符包含二进制格式的安全信息。 `Windows API`提供了用于将二进制安全描述符与文本字符串相互转换的功能。字符串格式的安全描述符不起作用，但是对于存储或传输安全描述符信息很有用。
 
-要将安全描述符转换为字符串格式，请调用 [`ConvertSecurityDescriptorToStringSecurityDescriptor`](https://docs.microsoft.com/en-us/windows/desktop/api/Sddl/nf-sddl-convertsecuritydescriptortostringsecuritydescriptora)函数。要将字符串格式的安全描述符转换回有效的功能安全描述符，请调用[`ConvertStringSecurityDescriptorToSecurityDescriptor`](https://docs.microsoft.com/en-us/windows/desktop/api/Sddl/nf-sddl-convertstringsecuritydescriptortosecuritydescriptora)函数。
+要将安全描述符转换为字符串格式，需要调用 [`ConvertSecurityDescriptorToStringSecurityDescriptor`](https://docs.microsoft.com/en-us/windows/desktop/api/Sddl/nf-sddl-convertsecuritydescriptortostringsecuritydescriptora)函数。要将字符串格式的安全描述符转换回有效的功能安全描述符，需要调用[`ConvertStringSecurityDescriptorToSecurityDescriptor`](https://docs.microsoft.com/en-us/windows/desktop/api/Sddl/nf-sddl-convertstringsecuritydescriptortosecuritydescriptora)函数。
 

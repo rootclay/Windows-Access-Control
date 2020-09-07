@@ -2,15 +2,19 @@
 
 ## **访问控制列表**
 
-访问控制列表（ACL）是访问控制条目（ACE）的列表。 ACL中的每个ACE都标识一个受托者，并指定允许、拒绝或审核该受托者的访问权限。可保护对象的安全描述符可以包含两种类型的ACL：DACL和SACL。
+访问控制列表（ACL）是访问控制条目（ACE）的列表。 ACL中的每个ACE都标识一个对象（通常称这个对象对受托者，受托者可以是一个用户、用户组或者是一个登陆会话），并指定允许、拒绝或审核该受托者的访问权限。可保护对象的安全描述符可以包含两种类型的ACL：DACL和SACL。
 
-任意访问控制列表（DACL）标识允许或拒绝访问安全对象的受托者。当进程尝试访问安全对象时，系统将检查该对象的DACL中的ACE，以确定是否授予对该对象的访问权限。如果对象没有DACL，则系统将授予所有人完全访问权限。如果对象的DACL没有ACE，则系统将拒绝所有尝试访问该对象的尝试，因为DACL不允许任何访问权限。系统依次检查ACE，直到找到一个或多个允许所有请求的访问权限的ACE，或者直到拒绝任何请求的访问权限为止。有关更多信息，请参见DACL如何控制对对象的访问。有关如何正确创建DACL的信息，请参阅创建DACL。
+DACL标识允许或拒绝访问安全对象的受托者。当进程尝试访问安全对象时，系统将检查该对象的DACL中的ACE，以确定是否授予对该对象的访问权限。
 
-系统访问控制列表（SACL）使管理员可以记录访问安全对象的尝试。每个ACE指定指定受托者尝试访问的类型，这些尝试使系统在安全事件日志中生成记录。当访问尝试失败、成功或失败时，SACL中的ACE可以生成审核记录。有关SACL的更多信息，请参见审核生成和SACL访问权限。
+1. 如果对象没有DACL，则系统将授予所有人完全访问权限。
+2. 如果对象的DACL没有ACE，则系统将拒绝所有尝试访问该对象的尝试，因为DACL不允许任何访问权限。
+3. 系统依次检查ACE，直到找到一个或多个允许所有请求的访问权限的ACE，或者直到拒绝任何请求的访问权限为止。更多信息可参考[DACL如何控制对对象的访问](https://docs.microsoft.com/en-us/windows/win32/secauthz/how-dacls-control-access-to-an-object)。有关如何正确创建DACL的信息，参考创建[DACL](https://docs.microsoft.com/en-us/windows/desktop/SecBP/creating-a-dacl)。
 
-不要尝试直接使用ACL的内容。为确保ACL在语义上正确，请使用适当的函数来创建和操作ACL。有关更多信息，请参见从ACL获取信息和创建或修改ACL。
+SACL使管理员可以记录任何人对安全对象的访问。每个ACE指定受托者尝试访问的类型，这些访问使系统在安全事件日志中生成记录。当访问尝试失败或成功时，SACL中的ACE可以生成审核记录。有关SACL的更多信息，请参见[审核生成](https://docs.microsoft.com/en-us/windows/win32/secauthz/audit-generation)和[SACL访问权限](https://docs.microsoft.com/en-us/windows/win32/secauthz/sacl-access-right)。
 
-ACL还提供对`Microsoft Active Directory`目录服务对象的访问控制。 `Active Directory`服务接口（ADSI）包括用于创建和修改这些ACL内容的例程。有关更多信息，请参见控制对Active Directory对象的访问。
+不要尝试直接使用ACL的内容。为确保ACL在语义上正确，请使用适当的函数来创建和操作ACL。有关更多信息，请参见从[ACL获取信息](https://docs.microsoft.com/en-us/windows/win32/secauthz/getting-information-from-an-acl)和[创建或修改ACL](https://docs.microsoft.com/en-us/windows/win32/secauthz/creating-or-modifying-an-acl)。
+
+ACL还提供对`Microsoft Active Directory`目录服务对象的访问控制。 `Active Directory`服务接口（ADSI）包括用于创建和修改这些ACL内容的例程。有关更多信息，参考[控制对Active Directory对象的访问](https://docs.microsoft.com/en-us/windows/desktop/AD/controlling-access-to-objects-in-active-directory-domain-services)。
 
 ### **从ACL获取信息**
 

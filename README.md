@@ -2,7 +2,7 @@
 description: 'https://rootclay.gitbook.io/windows-access-control/'
 ---
 
-# 1. Windows访问控制模型
+# Windows访问控制
 
 ## 介绍
 
