@@ -10,8 +10,8 @@ description: 'Access Token:与特定的windows账户关联，账户环境下启�
 
 当线程与安全对象进行交互或尝试执行需要特权的系统任务时，系统使用访问令牌来标识用户。访问令牌包含以下信息：
 
-* 用户帐户的安全标识符（SID）
-* 用户所属的组的SID
+* 用户帐户的安全标识符（SID）（关SID是什么后续章节会详细介绍）
+* 用户所在组的SID
 * 标识当前登录会话（logon session）的登录SID
 * 用户或用户组拥有的特权列表
 * 所有者SID
@@ -23,11 +23,95 @@ description: 'Access Token:与特定的windows账户关联，账户环境下启�
 * 当前的模拟级别
 * 其他数据
 
-每个进程都有一个主要令牌，用于描述与该进程关联的用户帐户的安全上下文。默认情况下，当进程的线程与安全对象进行交互时，系统使用主令牌。此外，线程可以模拟客户端帐户。模拟允许线程使用客户端的安全上下文与安全对象进行交互。模拟客户端的线程同时具有主令牌和模拟令牌。（出现这种情况是因为服务操作是在寄宿进程中执行，在默认的情况下，服务操作是否具有足够的权限访问某个资源（比如文件）取决于执行寄宿进程Windows帐号的权限设置，而与作为客户端的Windows帐号无关。在有多情况下，我们希望服务操作执行在基于客户端的安全上下文中执行，以解决执行服务进行的帐号权限不足的问题。简单来说就是我们希望不同客户端来访问服务时，服务可以模拟客户端的身份去访问服务，而不是用自己的主进程Token身份去访问。）
+Windows Access Token分两种：
+
+1. 授权令牌（Delegation token） 
+2. 模拟令牌（Impersonation令牌）
+
+两种token只有在系统重启后才会清除；授权令牌在用户注销后，该令牌会变为模拟令牌依旧有效。
+
+每个进程都有一个主要令牌，用于描述与该进程关联的用户帐户的安全上下文。默认情况下，当进程的线程与安全对象进行交互时，系统使用主令牌。
+
+此外，线程可以模拟客户端帐户。模拟允许线程使用客户端的安全上下文与安全对象进行交互。模拟客户端的线程同时具有主令牌和模拟令牌。_（出现这种情况是因为服务操作是在寄宿进程中执行，在默认的情况下，服务操作是否具有足够的权限访问某个资源（比如文件）取决于执行寄宿进程Windows帐号的权限设置，而与作为客户端的Windows帐号无关。在有多情况下，我们希望服务操作执行在基于客户端的安全上下文中执行，以解决执行服务进行的帐号权限不足的问题。简单来说就是我们希望不同客户端来访问服务时，服务可以模拟客户端的身份去访问服务，而不是用自己的主进程Token身份去访问。）_
 
 使用`OpenProcessToken`函数可检索进程的主令牌的句柄。使用`OpenThreadToken`函数检索线程的模拟令牌的句柄。
 
-您可以使用以下功能来操作访问令牌。
+给出一个C++代码示例来看看如何使用API，这段代码主要用于查看当前运行的账户是否在Administrators组内。
+
+```text
+C++
+// ConsoleApplication1.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
+//
+
+#include <iostream>
+#include <windows.h> 
+#include <vector>
+
+bool is_administrator() {
+    HANDLE access_token;
+    DWORD buffer_size = 0;
+    PSID admin_SID;
+    TOKEN_GROUPS* group_token = NULL;
+    SID_IDENTIFIER_AUTHORITY NT_authority = SECURITY_NT_AUTHORITY;
+
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_READ, &access_token))
+        return false;
+
+    GetTokenInformation(
+        access_token,
+        TokenGroups,
+        group_token,
+        0,
+        &buffer_size
+    );
+
+    std::vector<char> buffer(buffer_size);
+
+    group_token =
+        reinterpret_cast<TOKEN_GROUPS*>(&buffer[0]);
+
+    bool succeeded = GetTokenInformation(
+        access_token,
+        TokenGroups,
+        group_token,
+        buffer_size,
+        &buffer_size
+    );
+
+    CloseHandle(access_token);
+    if (!succeeded)
+        return false;
+
+    if (!AllocateAndInitializeSid(
+        &NT_authority,
+        2,
+        SECURITY_BUILTIN_DOMAIN_RID,
+        DOMAIN_ALIAS_RID_ADMINS,
+        0, 0, 0, 0, 0, 0,
+        &admin_SID
+    ))
+    {
+        return false;
+    }
+
+    bool found = false;
+    for (int i = 0; !found && i < group_token->GroupCount; i++)
+        found = EqualSid(admin_SID, group_token->Groups[i].Sid);
+    FreeSid(admin_SID);
+    return found;
+}
+
+int main()
+{
+    bool ret;
+    ret = is_administrator();
+    if (ret) {
+        printf("Yes, you are administrator!");
+    }    
+}
+```
+
+其他的API还有很多，可以使用以下功能来操作访问令牌。
 
 | 函数 | 描述 |
 | :---: | :---: |
