@@ -19,7 +19,7 @@ description: 'Access Token:与特定的windows账户关联，账户环境下启�
 * 用户创建安全对象而不指定安全描述符时系统使用的默认DACL
 * 访问令牌的来源
 * 令牌是主要令牌（内核分配的令牌）还是模拟令牌（模拟而来的令牌）
-* 限制SID的可选列表
+* 受限制SID的可选列表
 * 当前的模拟级别
 * 其他数据
 
@@ -151,19 +151,33 @@ int main()
 
 ### **受限令牌**
 
-受限令牌是已由`CreateRestrictedToken`函数修改的主要或模拟访问令牌。在受限令牌的安全上下文中运行的进程或模拟线程在访问安全对象或执行特权操作方面的能力受到限制。 `CreateRestrictedToken`函数可以通过以下方式限制令牌：
+一个常见的受限令牌如下图所示，这是一个未过UAC的用户，通常来说Windows在启动时LSA将尝试识别用户是否是特权组的成员，或者是否已使用与IsTokenRestricted函数类似的功能授予敏感特权。存在限制的SID将生成低特权的新访问令牌。
 
-* 从令牌中删除特权。
-* 将“仅拒绝”属性应用于令牌中的SID，以便它们不能用于访问受保护的对象。有关“仅拒绝”属性的更多信息，请参阅访问令牌中的SID属性\([https://docs.microsoft.com/en-us/windows/win32/secauthz/sid-attributes-in-an-access-token\)。](https://docs.microsoft.com/en-us/windows/win32/secauthz/sid-attributes-in-an-access-token%29。)
-* 指定限制SID的列表，这可以限制对安全对象的访问。
+![&#x4F4E;&#x7279;&#x6743;&#x7528;&#x6237;](.gitbook/assets/image%20%287%29.png)
+
+成为管理员之后便会增加大量权限：
+
+![&#x7BA1;&#x7406;&#x5458;&#x7279;&#x6743;](.gitbook/assets/image%20%283%29.png)
+
+也可以使用Process Explorer查看进安全信息：
+
+![Process Explorer&#x67E5;&#x770B;&#x8FDB;&#x7A0B;&#x5185;&#x5BB9;](.gitbook/assets/image%20%286%29.png)
+
+受限令牌是已由`CreateRestrictedToken`函数修改的主令牌或模拟访问令牌。在受限令牌的安全上下文中运行的进程或模拟线程在访问安全对象或执行特权操作方面的能力受到限制。 `CreateRestrictedToken`函数可以通过以下方式限制令牌：
+
+* 从令牌中删除某些特权。
+* 将“仅拒绝”属性应用于令牌中的SID，以便它们不能用于访问受保护的对象。（相关内容可以产看下一节的SID属性）
+* 限制SID列表，这可以限制受限令牌拥有者对安全对象的访问。
 
 当系统检查令牌对安全对象的访问时，系统将使用限制SID列表。当受限制的进程或线程尝试访问安全对象时，系统执行两项访问检查：一项使用令牌启用的SID，另一项使用限制SID列表。仅当两个访问检查都允许所请求的访问权限时，才授予访问权限。有关访问检查的更多信息，请参见DACL如何控制对对象的访问: [How DACLs Control Access to an Object](https://docs.microsoft.com/en-us/windows/win32/secauthz/how-dacls-control-access-to-an-object)
 
-您可以在对`CreateProcessAsUser`函数的调用中使用受限制的主令牌。通常调用`CreateProcessAsUser`的进程必须具有`SE_ASSIGNPRIMARYTOKEN_NAME`特权，该特权通常仅由系统代码或`LocalSystem`帐户中运行的服务保留。但是，如果`CreateProcessAsUser`调用指定了调用者主令牌的受限版本，则不需要此特权。这使普通应用程序可以创建受限进程。
+您可以在对`CreateProcessAsUser`函数的调用中使用受限制的主令牌。通常调用`CreateProcessAsUser`的进程必须具有`SE_ASSIGNPRIMARYTOKEN_NAME`特权，该特权通常仅由系统代码或`LocalSystem`帐户中运行的服务保留。但是，如果`CreateProcessAsUser`调用指定了调用者主令牌的受限令牌，则不需要此特权。这使普通应用程序可以创建受限进程。
 
-您还可以在`ImpersonateLoggedOnUser`函数中使用受限制的主要或模拟令牌。
+![SE\_ASSIGNPRIMARYTOKEN\_NAME&#x7279;&#x6743;](.gitbook/assets/image%20%289%29.png)
 
-若要确定令牌是否具有限制SID列表，请调用`IsTokenRestricted`函数。
+还可以在`ImpersonateLoggedOnUser`函数中使用受限制的主要或模拟令牌。
+
+若要确定令牌是否具有限制SID列表，可以调用`IsTokenRestricted`函数。
 
 注意：使用受限令牌的应用程序应在默认桌面以外的其他桌面上运行受限应用程序, 防止受限制的应用程序使用`SendMessage`或`PostMessage`攻击默认桌面上不受限制的应用程序。如有必要，请根据您的应用程序在桌面之间切换。
 

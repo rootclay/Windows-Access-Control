@@ -2,7 +2,7 @@
 
 ## **访问控制列表**
 
-![ACL&#x5206;&#x7C7B;](.gitbook/assets/image%20%282%29.png)
+![ACL&#x5206;&#x7C7B;](.gitbook/assets/image%20%281%29.png)
 
 DACL：自主访问控制列表\(DACL\)是安全描述符中最重要的，它里面包含零个或多个访问控制项（ACE，Access Control Entry），每个访问控制项的内容描述了允许或拒绝特定账户对这个对象执行特定操作。
 
