@@ -171,7 +171,7 @@ int main()
 
 当系统检查令牌对安全对象的访问时，系统将使用限制SID列表。当受限制的进程或线程尝试访问安全对象时，系统执行两项访问检查：一项使用令牌启用的SID，另一项使用限制SID列表。仅当两个访问检查都允许所请求的访问权限时，才授予访问权限。有关访问检查的更多信息，请参见DACL如何控制对对象的访问: [How DACLs Control Access to an Object](https://docs.microsoft.com/en-us/windows/win32/secauthz/how-dacls-control-access-to-an-object)
 
-您可以在对`CreateProcessAsUser`函数的调用中使用受限制的主令牌。通常调用`CreateProcessAsUser`的进程必须具有`SE_ASSIGNPRIMARYTOKEN_NAME`特权，该特权通常仅由系统代码或`LocalSystem`帐户中运行的服务保留。但是，如果`CreateProcessAsUser`调用指定了调用者主令牌的受限令牌，则不需要此特权。这使普通应用程序可以创建受限进程。
+可以在对`CreateProcessAsUser`函数的调用中使用受限制的主令牌。通常调用`CreateProcessAsUser`的进程必须具有`SE_ASSIGNPRIMARYTOKEN_NAME`特权，该特权通常仅由系统代码或`LocalSystem`帐户中运行的服务保留。但是，如果`CreateProcessAsUser`调用指定了调用者主令牌的受限令牌，则不需要此特权。这使普通应用程序可以创建受限进程。
 
 ![SE\_ASSIGNPRIMARYTOKEN\_NAME&#x7279;&#x6743;](.gitbook/assets/image%20%289%29.png)
 
@@ -179,9 +179,9 @@ int main()
 
 若要确定令牌是否具有限制SID列表，可以调用`IsTokenRestricted`函数。
 
-注意：使用受限令牌的应用程序应在默认桌面以外的其他桌面上运行受限应用程序, 防止受限制的应用程序使用`SendMessage`或`PostMessage`攻击默认桌面上不受限制的应用程序。如有必要，请根据您的应用程序在桌面之间切换。
+注意：使用受限令牌的应用程序应在默认桌面以外的其他桌面上运行受限应用程序, 防止受限制的应用程序使用`SendMessage`或`PostMessage`攻击默认桌面上不受限制的应用程序。
 
-### **访问令牌中的SID属性**
+### **Access Token中的SID属性**
 
 访问令牌中的每个用户和组安全标识符（SID）具有一组属性，这些属性控制系统在访问检查中如何使用SID。下表列出了控制访问检查的属性。
 
@@ -190,13 +190,13 @@ int main()
 | SE\_GROUP\_ENABLED | 启用具有此属性的SID进行访问检查。当系统执行访问检查时，它将检查适用于访问令牌中已启用的SID之一的允许访问和拒绝访问的访问控制项（ACE）。除非设置了`SE_GROUP_USE_FOR_DENY_ONLY`属性，否则在访问检查期间将忽略不具有此属性的SID。 |
 | SE\_GROUP\_USE\_FOR\_DENY\_ONLY | 具有此属性的SID是仅拒绝的SID。当系统执行访问检查时，它会检查适用于SID的拒绝访问的ACE，但是会忽略SID允许访问的ACE。如果设置了此属性，则不会设置SE\_GROUP\_ENABLED属性，并且无法重新启用SID |
 
-要设置或清除组SID的`SE_GROUP_ENABLED`属性，请使用`AdjustTokenGroups`函数。您不能禁用具有`SE_GROUP_MANDATORY`属性的组SID。您不能使用`AdjustTokenGroups`禁用访问令牌的用户SID。
+要设置或清除组SID的`SE_GROUP_ENABLED`属性，可使用`AdjustTokenGroups`函数。不能禁用具有`SE_GROUP_MANDATORY`属性的组SID。不能使用`AdjustTokenGroups`禁用访问令牌的用户SID。
 
-若要确定令牌中是否启用了SID，即它是否具有`SE_GROUP_ENABLED`属性，请调用`CheckTokenMembership`函数。
+若要确定令牌中是否启用了SID，即它是否具有`SE_GROUP_ENABLED`属性，可以调用`CheckTokenMembership`函数。
 
-若要设置SID的`SE_GROUP_USE_FOR_DENY_ONLY`属性，请在调用`CreateRestrictedToken`函数时指定的拒绝专用SID列表中包含的该SID。 `CreateRestrictedToken`可以将`SE_GROUP_USE_FOR_DENY_ONLY`属性应用于任何SID，包括用户SID和具有`SE_GROUP_MANDATORY`属性的组SID。但是，您不能从SID中删除仅拒绝属性，也不能使用`AdjustTokenGroups`在仅拒绝SID上设置`SE_GROUP_ENABLED`属性。
+若要设置SID的`SE_GROUP_USE_FOR_DENY_ONLY`属性，可以在调用`CreateRestrictedToken`函数时指定的拒绝专用SID列表中包含的该SID。 `CreateRestrictedToken`可以将`SE_GROUP_USE_FOR_DENY_ONLY`属性应用于任何SID，包括用户SID和具有`SE_GROUP_MANDATORY`属性的组SID。但不能从SID中删除仅拒绝属性，也不能使用`AdjustTokenGroups`在仅拒绝SID上设置`SE_GROUP_ENABLED`属性。
 
-要获取SID的属性，请使用`TokenGroups`值调用`GetTokenInformation`函数。该函数返回一个`SID_AND_ATTRIBUTES`结构数组，该结构标识组SID及其属性。
+要获取SID的属性，可以使用`TokenGroups`值调用`GetTokenInformation`函数。该函数返回一个`SID_AND_ATTRIBUTES`结构数组，该结构标识组SID及其属性。
 
 ### **访问令牌对象的访问权限**
 
@@ -204,7 +204,7 @@ int main()
 
 要获取或设置访问令牌的安全描述符，请调用`GetKernelObjectSecurity`和`SetKernelObjectSecurity`函数。
 
-当您调用`OpenProcessToken`或`OpenThreadToken`函数以获取访问令牌的句柄时，系统将根据令牌的安全描述符中的DACL检查请求的访问权限。
+当调用`OpenProcessToken`或`OpenThreadToken`函数以获取访问令牌的句柄时，系统将根据令牌的安全描述符中的DACL检查请求的访问权限。
 
 以下是访问令牌对象的有效访问权限：
 
