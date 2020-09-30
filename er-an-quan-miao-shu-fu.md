@@ -23,11 +23,9 @@ description: 安全描述符，与被访问对象关联。由对象所有者的S
 
 Windows API提供了用于获取和设置与安全对象关联的安全描述符的组件的功能。使用`GetSecurityInfo`和`GetNamedSecurityInfo`函数检索指向对象的安全描述符的指针。这些函数还可以检索指向安全描述符的各个组件的指针：DACL、SACL、所有者SID和主要组SID。使用`SetSecurityInfo`和`SetNamedSecurityInfo`函数来设置对象的安全描述符的组件。
 
-通常，应将`GetSecurityInfo`和`SetSecurityInfo`与通过句柄标识的对象一起使用，将`SetNamedSecurityInfo`和`GetNamedSecurityInfo`与通过名称标识的对象一起使用。有关在使用各种类型的对象时要使用的特定功能的更多信息，请参见安全对象:[https://docs.microsoft.com/en-us/windows/win32/secauthz/securable-objects](https://docs.microsoft.com/en-us/windows/win32/secauthz/securable-objects)
+通常，应将`GetSecurityInfo`和`SetSecurityInfo`与通过句柄标识的对象一起使用，将`SetNamedSecurityInfo`和`GetNamedSecurityInfo`与通过名称标识的对象一起使用。
 
-Windows API提供了用于操纵安全描述符的组件的其他功能。有关使用访问控制列表（DACL或SACL）的信息，请参阅从ACL获取信息和创建或修改ACL。有关SID的信息，请参阅安全标识符（SID）。
-
-要在安全描述符中获取控制信息，请调用`GetSecurityDescriptorControl`函数。要设置与自动ACE继承相关的控制位，请调用`SetSecurityDescriptorControl`函数。其他控制位由设置安全描述符组件的各种功能设置。例如，如果使用`SetSecurityInfo`更改对象的DACL，则该函数将适当地设置或清除位，以指示安全描述符是否具有DACL，是否为默认DACL，等等。另一个示例是安全描述符中包含的资源管理器（RM）控制位。这些位根据资源管理器的实现使用，并通过`GetSecurityDescriptorRMControl`和`SetSecurityDescriptorRMControl`函数进行访问。
+要在安全描述符中获取控制信息，可调用`GetSecurityDescriptorControl`函数。要设置与自动ACE继承相关的控制位，可调用`SetSecurityDescriptorControl`函数。其他控制位由设置安全描述符组件的各种功能设置。例如，如果使用`SetSecurityInfo`更改对象的DACL，则该函数将适当地设置或清除位，以指示安全描述符是否具有DACL，是否为默认DACL，等等。另一个示例是安全描述符中包含的资源管理器（RM）控制位。这些位根据资源管理器的实现使用，并通过`GetSecurityDescriptorRMControl`和`SetSecurityDescriptorRMControl`函数进行访问。
 
 ### **创建对象后的安全描述符**
 
