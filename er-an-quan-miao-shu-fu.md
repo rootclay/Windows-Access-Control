@@ -96,6 +96,142 @@ DWORD SetSecurityInfo(
 
 新对象的主要组是对象创建者指定的安全描述符中的主要组。如果对象的创建者未指定主要组，则该对象的主要组是创建者的主要或模拟令牌中的默认主要组。
 
+下面的示例为新的注册表项创建安全描述符。可以使用类似的代码为其他对象类型创建安全描述符。
+
+1. 该示例使用两个ACE的信息填充EXPLICIT\_ACCESS结构的数组。一个ACE允许所有人读取权限；另一个ACE允许管理员完全访问。 
+2. 该EXPLICIT\_ACCESS结构传递给SetEntriesInAcl函数来创建的安全描述符DACL。 
+3. 在为安全描述符分配了内存之后，将调用InitializeSecurityDescriptor和SetSecurityDescriptorDacl函数来初始化安全描述符并附加DACL。 
+4. 然后将安全描述符存储在SECURITY\_ATTRIBUTES结构中，并传递给RegCreateKeyEx函数，该函数将安全描述符附加到新创建的key上。
+
+```text
+#pragma comment(lib, "advapi32.lib")
+
+#include <windows.h>
+#include <stdio.h>
+#include <aclapi.h>
+#include <tchar.h>
+
+void main()
+{
+
+    DWORD dwRes, dwDisposition;
+    PSID pEveryoneSID = NULL, pAdminSID = NULL;
+    PACL pACL = NULL;
+    PSECURITY_DESCRIPTOR pSD = NULL;
+    EXPLICIT_ACCESS ea[2];
+    SID_IDENTIFIER_AUTHORITY SIDAuthWorld =
+            SECURITY_WORLD_SID_AUTHORITY;
+    SID_IDENTIFIER_AUTHORITY SIDAuthNT = SECURITY_NT_AUTHORITY;
+    SECURITY_ATTRIBUTES sa;
+    LONG lRes;
+    HKEY hkSub = NULL;
+
+    // Create a well-known SID for the Everyone group.
+    if(!AllocateAndInitializeSid(&SIDAuthWorld, 1,
+                     SECURITY_WORLD_RID,
+                     0, 0, 0, 0, 0, 0, 0,
+                     &pEveryoneSID))
+    {
+        _tprintf(_T("AllocateAndInitializeSid Error %u\n"), GetLastError());
+        goto Cleanup;
+    }
+
+    // Initialize an EXPLICIT_ACCESS structure for an ACE.
+    // The ACE will allow Everyone read access to the key.
+    ZeroMemory(&ea, 2 * sizeof(EXPLICIT_ACCESS));
+    ea[0].grfAccessPermissions = KEY_READ;
+    ea[0].grfAccessMode = SET_ACCESS;
+    ea[0].grfInheritance= NO_INHERITANCE;
+    ea[0].Trustee.TrusteeForm = TRUSTEE_IS_SID;
+    ea[0].Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+    ea[0].Trustee.ptstrName  = (LPTSTR) pEveryoneSID;
+
+    // Create a SID for the BUILTIN\Administrators group.
+    if(! AllocateAndInitializeSid(&SIDAuthNT, 2,
+                     SECURITY_BUILTIN_DOMAIN_RID,
+                     DOMAIN_ALIAS_RID_ADMINS,
+                     0, 0, 0, 0, 0, 0,
+                     &pAdminSID)) 
+    {
+        _tprintf(_T("AllocateAndInitializeSid Error %u\n"), GetLastError());
+        goto Cleanup; 
+    }
+
+    // Initialize an EXPLICIT_ACCESS structure for an ACE.
+    // The ACE will allow the Administrators group full access to
+    // the key.
+    ea[1].grfAccessPermissions = KEY_ALL_ACCESS;
+    ea[1].grfAccessMode = SET_ACCESS;
+    ea[1].grfInheritance= NO_INHERITANCE;
+    ea[1].Trustee.TrusteeForm = TRUSTEE_IS_SID;
+    ea[1].Trustee.TrusteeType = TRUSTEE_IS_GROUP;
+    ea[1].Trustee.ptstrName  = (LPTSTR) pAdminSID;
+
+    // Create a new ACL that contains the new ACEs.
+    dwRes = SetEntriesInAcl(2, ea, NULL, &pACL);
+    if (ERROR_SUCCESS != dwRes) 
+    {
+        _tprintf(_T("SetEntriesInAcl Error %u\n"), GetLastError());
+        goto Cleanup;
+    }
+
+    // Initialize a security descriptor.  
+    pSD = (PSECURITY_DESCRIPTOR) LocalAlloc(LPTR, 
+                             SECURITY_DESCRIPTOR_MIN_LENGTH); 
+    if (NULL == pSD) 
+    { 
+        _tprintf(_T("LocalAlloc Error %u\n"), GetLastError());
+        goto Cleanup; 
+    } 
+ 
+    if (!InitializeSecurityDescriptor(pSD,
+            SECURITY_DESCRIPTOR_REVISION)) 
+    {  
+        _tprintf(_T("InitializeSecurityDescriptor Error %u\n"),
+                                GetLastError());
+        goto Cleanup; 
+    } 
+ 
+    // Add the ACL to the security descriptor. 
+    if (!SetSecurityDescriptorDacl(pSD, 
+            TRUE,     // bDaclPresent flag   
+            pACL, 
+            FALSE))   // not a default DACL 
+    {  
+        _tprintf(_T("SetSecurityDescriptorDacl Error %u\n"),
+                GetLastError());
+        goto Cleanup; 
+    } 
+
+    // Initialize a security attributes structure.
+    sa.nLength = sizeof (SECURITY_ATTRIBUTES);
+    sa.lpSecurityDescriptor = pSD;
+    sa.bInheritHandle = FALSE;
+
+    // Use the security attributes to set the security descriptor 
+    // when you create a key.
+    lRes = RegCreateKeyEx(HKEY_CURRENT_USER, _T("mykey"), 0, _T(""), 0, 
+            KEY_READ | KEY_WRITE, &sa, &hkSub, &dwDisposition); 
+    _tprintf(_T("RegCreateKeyEx result %u\n"), lRes );
+
+Cleanup:
+
+    if (pEveryoneSID) 
+        FreeSid(pEveryoneSID);
+    if (pAdminSID) 
+        FreeSid(pAdminSID);
+    if (pACL) 
+        LocalFree(pACL);
+    if (pSD) 
+        LocalFree(pSD);
+    if (hkSub) 
+        RegCloseKey(hkSub);
+
+    return;
+
+}
+```
+
 ### **安全描述符字符串**
 
 有效的功能安全描述符包含二进制格式的安全信息。 `Windows API`提供了用于将二进制安全描述符与文本字符串相互转换的功能。字符串格式的安全描述符不起作用，但是对于存储或传输安全描述符信息很有用。若要将安全描述符转换为字符串格式，需要调用 [`ConvertSecurityDescriptorToStringSecurityDescriptor`](https://docs.microsoft.com/en-us/windows/desktop/api/Sddl/nf-sddl-convertsecuritydescriptortostringsecuritydescriptora)函数。要将字符串格式的安全描述符转换回有效的功能安全描述符，需要调用[`ConvertStringSecurityDescriptorToSecurityDescriptor`](https://docs.microsoft.com/en-us/windows/desktop/api/Sddl/nf-sddl-convertstringsecuritydescriptortosecuritydescriptora)函数。
