@@ -7,13 +7,11 @@ description: >-
 
 ## 介绍
 
+Author：香山（微信：\_xiangshan）
+
 本文刚开始写，慢慢写完再发布，不妥之处及时沟通
 
-\*\*\*\*
-
-**Gitbook链接地址：**[**https://rootclay.gitbook.io/windows-access-control/**](https://rootclay.gitbook.io/windows-access-control/)\*\*\*\*
-
-\*\*\*\*
+Gitbook链接地址：[https://rootclay.gitbook.io/windows-access-control/](https://rootclay.gitbook.io/windows-access-control/)
 
 **访问控制**是指控制谁可以访问操作系统中资源的安全功能。 应用程序调用访问控制功能来设置谁可以访问特定资源，或者控制对应用程序提供的资源的访问。
 
