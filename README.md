@@ -1,5 +1,6 @@
 ---
-description: '本文刚开始写，慢慢写完再发布，不妥之处及时沟通。https://rootclay.gitbook.io/windows-access-control/'
+description: >-
+  本项目主要把理解的Windows访问控制内容进行输出整理，并结合上安全问题来讲解。在学习并整理的过程中发现WIndows的认证内容繁多，访问控制只是其冰山一角，后续也会考虑以访问控制为基础继续完善本项目，将整个认证梳理为文，为后来之人提供基础。
 ---
 
 # Windows访问控制
@@ -8,7 +9,11 @@ description: '本文刚开始写，慢慢写完再发布，不妥之处及时沟
 
 本文刚开始写，慢慢写完再发布，不妥之处及时沟通
 
-**链接地址：**[**https://rootclay.gitbook.io/windows-access-control/**](https://rootclay.gitbook.io/windows-access-control/)\*\*\*\*
+\*\*\*\*
+
+**Gitbook链接地址：**[**https://rootclay.gitbook.io/windows-access-control/**](https://rootclay.gitbook.io/windows-access-control/)\*\*\*\*
+
+\*\*\*\*
 
 **访问控制**是指控制谁可以访问操作系统中资源的安全功能。 应用程序调用访问控制功能来设置谁可以访问特定资源，或者控制对应用程序提供的资源的访问。
 
