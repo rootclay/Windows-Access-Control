@@ -1,10 +1,10 @@
-# （一）基于条件ACE的SDDL
+# （一）基于条件表达式ACE的SDDL
 
-## 条件ACE的安全描述符定义语言
+## ACE在的SDDL中的条件表达式
 
 条件访问控制项（ACE）允许在执行访问检查时评估访问条件。安全描述符定义语言（SDDL）提供了用于以字符串格式定义条件ACE的语法。
 
-条件ACE的SDDL与任何ACE相同，条件语句的语法附加在ACE字符串的末尾。有关SDDL的信息，请参阅安全描述符定义语言。
+条件ACE的SDDL与任何ACE相同，条件语句的语法附加在ACE字符串的末尾。
 
 资源属性中的“＃”符号与“ 0”同义。例如，`D：AI（XA; OICI; FA ;;; WD;（OctetStringType ==＃1＃2＃3 ##））`等效并解释为`D：AI（XA; OICI; FA ;;; WD ;（OctetStringType ==＃01020300））`。
 

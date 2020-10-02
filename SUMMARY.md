@@ -11,7 +11,7 @@
 * [（七）安全标识符（SID）](qi-an-quan-biao-shi-fu.md)
 * [（八）其他](ba-qi-ta.md)
 * [2. SDDL](security-descriptor-definition-language.md)
-* [（一）基于条件ACE的SDDL](security-descriptor-definition-language-for-conditional-aces.md)
+* [（一）基于条件表达式ACE的SDDL](security-descriptor-definition-language-for-conditional-aces.md)
 * [（二）ACE字符串](ace-strings.md)
 * [（三）SID字符串](sid-strings.md)
 * [3. 权限控制其他内容](quan-xian-kong-zhi-qi-ta-nei-rong.md)

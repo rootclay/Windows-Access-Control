@@ -8,7 +8,7 @@
 
 范围：
 
-**ace\_type**
+**ace\_type：ACE的类型**
 
 一个字符串，指示ACE\_HEADER结构的AceType成员的值。 ACE类型字符串可以是Sddl.h中定义的以下字符串之一。
 
@@ -30,7 +30,7 @@
 | "XU" | SDDL\_CALLBACK\_AUDIT | SYSTEM\_AUDIT\_CALLBACK\_ACE\_TYPE**Windows Server 2008 R2, Windows 7, Windows Server 2008, Windows Vista and Windows Server 2003:** Not available. |
 | "ZA" | SDDL\_CALLBACK\_OBJECT\_ACCESS\_ALLOWED | ACCESS\_ALLOWED\_CALLBACK\_ACE\_TYPE**Windows Server 2008 R2, Windows 7, Windows Server 2008, Windows Vista and Windows Server 2003:** Not available. |
 
-**ace\_flags**
+**ace\_flags标志位**
 
 一个字符串，指示`ACE_HEADER`结构的`AceFlags`成员的值。 ACE标志字符串可以是Sddl.h中定义的以下字符串的串联。
 
@@ -46,7 +46,7 @@
 
 一个字符串，指示`ACE_HEADER`结构的`AceFlags`成员的值。 ACE标志字符串可以是`Sddl.h`中定义的以下字符串的串联。
 
-**rights**
+**rights：权限**
 
 一个字符串，指示由ACE控制的访问权限。该字符串可以是访问权限的十六进制字符串表示形式，例如“ 0x7800003F”，也可以是以下字符串的串联形式。
 

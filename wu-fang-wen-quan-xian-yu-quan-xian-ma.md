@@ -97,7 +97,7 @@ Winnt.h还定义了标准访问权限常量的以下组合
 
 每个`Active Directory`对象都有一个分配给它的安全描述符。可以在这些安全描述符中设置特定于目录服务对象的一组受托者权限。下表列出了这些权利也对应域服务ACE的权限图。
 
-![&#x57DF;&#x670D;&#x52A1;ACE&#x7F16;&#x8F91;&#x5668;](.gitbook/assets/image%20%2811%29.png)
+![&#x57DF;&#x670D;&#x52A1;ACE&#x7F16;&#x8F91;&#x5668;](.gitbook/assets/image%20%2814%29.png)
 
 | 权限 | Meaning |
 | :--- | :--- |
