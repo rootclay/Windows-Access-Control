@@ -4,9 +4,9 @@
 
 安全标识符（SID）是用于标识受托者的可变长度的唯一值。每个帐户都有一个由权威机构（例如Windows域控制器）颁发的唯一SID，并存储在安全数据库中。每次用户登录时，系统都会从数据库中检索该用户的SID，并将其放在该用户的访问令牌中。系统使用访问令牌中的SID在与Windows安全性的所有后续交互中识别用户。当SID用作用户或组的唯一标识符时，就不能再使用它来标识另一个用户或组。
 
-查询自己的SID可以通过whoami /user
+查询自己的SID可以通过：**`whoami /user`**
 
-查询其他用户的SID可以通过WMI
+查询其他用户的SID可以通过WMI命令查询：**`wmic useraccount where name="%username%" get sid`**
 
 常见的SID列表：
 
@@ -20,12 +20,12 @@
 Windows安全在以下安全元素中使用SID：
 
 * 在安全描述符中标识对象和主要组的所有者
-* 在访问控制条目中，标识允许，拒绝或审核访问的受托者
-* 在访问令牌中，用于标识用户和该用户所属的组
+* 在访问控制条目（ACE）中，标识允许，拒绝或审核访问的受托者
+* 在访问令牌中（AC Token），用于标识用户和该用户所属的组
 
 除了分配给特定用户和组的唯一创建的，特定于域的SID外，还有一些知名的SID用于标识通用组和通用用户。例如，众所周知的SID（每个人和世界）标识包含所有用户的组。
 
-大多数应用程序永远不需要使用SID。因为众所周知的SID的名称可能会有所不同，所以您应该使用函数从预定义的常量构建SID，而不要使用众所周知的SID的名称。例如，美国英语版本的Windows操作系统有一个众所周知的SID，名为“ `BUILTIN \ Administrators`”，在国际版本的系统上可能具有不同的名称。有关构建众所周知的SID的示例，请参见在C ++中搜索访问令牌中的SID。
+大多数应用程序永远不需要使用SID。因为常见的SID的名称可能会有所不同，所以您应该使用函数从预定义的常量构建SID，而不要使用常见的SID的名称。例如，英文版本的Windows操作系统有一个众所周知的SID，名为“ `BUILTIN\Administrators`”，在国际版本的系统上可能具有不同的名称。
 
 如果确实需要使用SID，请不要直接操作它们。而是使用以下功能。
 
@@ -48,27 +48,136 @@ Windows安全在以下安全元素中使用SID：
 | [**LookupAccountName**](https://docs.microsoft.com/en-us/windows/desktop/api/Winbase/nf-winbase-lookupaccountnamea) | 检索与指定帐户名对应的SID |
 | [**LookupAccountSid**](https://docs.microsoft.com/en-us/windows/desktop/api/Winbase/nf-winbase-lookupaccountsida) | 检索与指定的SID对应的帐户名 |
 
-### **SID组件**
+参考代码。示例使用OpenProcessToken和GetTokenInformation函数来获取访问令牌中的组成员身份。然后，它使用AllocateAndInitializeSid函数创建一个SID，该SID标识本地计算机管理员组的常见的SID。接下来，它使用EqualSid函数将知名SID与访问令牌中的组SID进行比较。如果令牌中存在SID，则该功能将检查SID属性以确定该令牌中SID是否已启用。
 
-SID值包括提供有关SID结构信息的组件和唯一标识受托者的组件。
+```text
+#include <windows.h>
+#include <stdio.h>
+#pragma comment(lib, "advapi32.lib")
+
+#define MAX_NAME 256
+
+BOOL SearchTokenGroupsForSID (VOID) 
+{
+    DWORD i, dwSize = 0, dwResult = 0;
+    HANDLE hToken;
+    PTOKEN_GROUPS pGroupInfo;
+    SID_NAME_USE SidType;
+    char lpName[MAX_NAME];
+    char lpDomain[MAX_NAME];
+    PSID pSID = NULL;
+    SID_IDENTIFIER_AUTHORITY SIDAuth = SECURITY_NT_AUTHORITY;
+       
+    // Open a handle to the access token for the calling process.
+
+    if (!OpenProcessToken( GetCurrentProcess(), TOKEN_QUERY, &hToken )) 
+    {
+        printf( "OpenProcessToken Error %u\n", GetLastError() );
+        return FALSE;
+    }
+
+    // Call GetTokenInformation to get the buffer size.
+
+    if(!GetTokenInformation(hToken, TokenGroups, NULL, dwSize, &dwSize)) 
+    {
+        dwResult = GetLastError();
+        if( dwResult != ERROR_INSUFFICIENT_BUFFER ) {
+            printf( "GetTokenInformation Error %u\n", dwResult );
+            return FALSE;
+        }
+    }
+
+    // Allocate the buffer.
+
+    pGroupInfo = (PTOKEN_GROUPS) GlobalAlloc( GPTR, dwSize );
+
+    // Call GetTokenInformation again to get the group information.
+
+    if(! GetTokenInformation(hToken, TokenGroups, pGroupInfo, 
+                            dwSize, &dwSize ) ) 
+    {
+        printf( "GetTokenInformation Error %u\n", GetLastError() );
+        return FALSE;
+    }
+
+    // Create a SID for the BUILTIN\Administrators group.
+
+    if(! AllocateAndInitializeSid( &SIDAuth, 2,
+                     SECURITY_BUILTIN_DOMAIN_RID,
+                     DOMAIN_ALIAS_RID_ADMINS,
+                     0, 0, 0, 0, 0, 0,
+                     &pSID) ) 
+    {
+        printf( "AllocateAndInitializeSid Error %u\n", GetLastError() );
+        return FALSE;
+    }
+
+    // Loop through the group SIDs looking for the administrator SID.
+
+    for(i=0; i<pGroupInfo->GroupCount; i++) 
+    {
+        if ( EqualSid(pSID, pGroupInfo->Groups[i].Sid) ) 
+        {
+
+            // Lookup the account name and print it.
+
+            dwSize = MAX_NAME;
+            if( !LookupAccountSid( NULL, pGroupInfo->Groups[i].Sid,
+                                  lpName, &dwSize, lpDomain, 
+                                  &dwSize, &SidType ) ) 
+            {
+                dwResult = GetLastError();
+                if( dwResult == ERROR_NONE_MAPPED )
+                   strcpy_s (lpName, dwSize, "NONE_MAPPED" );
+                else 
+                {
+                    printf("LookupAccountSid Error %u\n", GetLastError());
+                    return FALSE;
+                }
+            }
+            printf( "Current user is a member of the %s\\%s group\n", 
+                    lpDomain, lpName );
+
+            // Find out whether the SID is enabled in the token.
+            if (pGroupInfo->Groups[i].Attributes & SE_GROUP_ENABLED)
+                printf("The group SID is enabled.\n");
+            else if (pGroupInfo->Groups[i].Attributes & 
+                              SE_GROUP_USE_FOR_DENY_ONLY)
+                printf("The group SID is a deny-only SID.\n");
+            else 
+                printf("The group SID is not enabled.\n");
+        }
+    }
+
+    if (pSID)
+        FreeSid(pSID);
+    if ( pGroupInfo )
+        GlobalFree( pGroupInfo );
+    return TRUE;
+}
+```
+
+### **SID组成**
+
+SID值由SID结构信息和唯一标识受托者组成。
 
 SID由以下组件组成：
 
-* SID结构的修订级别
-* 一个48位的标识符授权值，用于标识发布SID的授权
+* SID 版本
+* 一个48位的标识符授权值，用于标识发布SID的授权（一般用来代指颁发机构）
 * 可变数量的子机构或相对标识符（RID）值，用于相对于发布SID的机构唯一地标识受托人
 
-标识符权限值和子权限值的组合确保即使两个不同的SID颁发机构发布相同的RID值组合，也不会有两个SID相同。每个SID颁发机构仅发出一次给定的RID。
+标识符授权值和子权限值的组合确保即使两个不同的SID颁发机构发布相同的RID值组合，也不会有两个SID相同。每个SID颁发机构仅发出一次给定的RID。
 
-SID以二进制格式存储在SID结构中。要显示SID，可以调用`ConvertSidToStringSid`函数将二进制SID转换为字符串格式。要将SID字符串转换回有效的功能性SID，请调用`ConvertStringSidToSid`函数。
+SID以二进制格式存储在SID结构中。要显示SID，可以调用`ConvertSidToStringSid`函数将二进制SID转换为字符串格式。要将SID字符串转换回有效的功能性SID，调用`ConvertStringSidToSid`函数。
 
 这些函数对SID使用以下标准化的字符串符号，这使得可视化其组件更加简单:
 
 S-_R_-_I_-_S_…
 
-在这种表示法中，文字字符“ S”将一系列数字标识为SID，R是修订级别，I是标识符授权值，S…是一个或多个子授权值。
+在这种表示法中，文字字符“ S”将一系列数字标识为SID，R是SID版本号，I是标识符授权值，S…是一个或多个子授权值。
 
-以下示例使用此表示法来显示本地Administrators组的众所周知的相对于域的SID：
+下面示例使用此表示法来显示本地Administrators组的常见的相对于域的SID：
 
 S-1-5-32-544
 
@@ -79,15 +188,15 @@ S-1-5-32-544
 * 第一子授权值32（`SECURITY_BUILTIN_DOMAIN_RID`）
 * 第二个子权限值544（`DOMAIN_ALIAS_RID_ADMINS`）
 
-### **知名的SID**
+### **常见的SID**
 
-众所周知的安全标识符（SID）标识通用组和通用用户。例如，有一些知名的SID可以标识以下组和用户：
+常见的安全标识符（SID）用来标识通用组和通用用户。例如，有一些知名的SID可以标识以下组和用户：
 
-* 每个人或世界，这是一个包括所有用户的组。
+* Everyone，这是一个包括所有用户的组。
 * `CREATOR_OWNER`，在可继承ACE中用作占位符。继承ACE后，系统将CREATOR\_OWNER SID替换为对象创建者的SID。
 * 本地计算机上内置域的Administrators组。
 
-有通用的知名SID，这些ID在使用此安全模型的所有安全系统上都有意义，包括Windows以外的其他操作系统。此外，还有一些众所周知的SID仅在Windows系统上有意义。
+有通用的知名SID，这些ID在使用此安全模型的所有安全系统上都有意义，包括Windows以外的其他操作系统。此外，还有一些常见的SID仅在Windows系统上有意义。
 
 Windows API为众所周知的标识符授权和相对标识符（RID）值定义了一组常量。您可以使用这些常量来创建众所周知的SID。下面的示例结合了`SECURITY_WORLD_SID_AUTHORITY和SECURITY_WORLD_RID`常数，以显示代表所有用户（所有人或世界）的特殊组的通用众所周知的SID：
 
@@ -95,9 +204,7 @@ S-1-1-0
 
 本示例对SID使用字符串表示法，其中S将字符串标识为SID，前1是SID的修订级别，其余两位数字是`SECURITY_WORLD_SID_AUTHORITY`和`SECURITY_WORLD_RID`常数。
 
-您可以使用`AllocateAndInitializeSid`函数通过将标识符授权值与最多八个子授权值组合来构建SID。例如，要确定已登录的用户是否为特定知名组的成员，请调用AllocateAndInitializeSid为该知名组构建一个SID，然后使用EqualSid函数将该SID与该用户中的组SID进行比较。访问令牌。有关示例，请参见在C ++中搜索访问令牌中的SID。您必须调用FreeSid函数以释放由AllocateAndInitializeSid分配的SID。
-
-本节的其余部分包含可用于构建已知SID的知名SID表以及标识符授权和子授权常量表。
+您可以使用`AllocateAndInitializeSid`函数通过将标识符授权值与最多八个子授权值组合来构建SID。例如，要确定已登录的用户是否为特定知名组的成员，请调用AllocateAndInitializeSid为该知名组构建一个SID，然后使用EqualSid函数将该SID与该用户中的组SID进行比较。
 
 以下是一些通用的众所周知的SID。
 
@@ -143,11 +250,11 @@ S-1-1-0
 | SECURITY\_ANONYMOUS\_LOGON\_RID | S-1-5-7 | 匿名登录，或空会话登录 |
 | SECURITY\_PROXY\_RID | S-1-5-8 | 代理. |
 | SECURITY\_ENTERPRISE\_CONTROLLERS\_RID | S-1-5-9 | 企业控制器. |
-| SECURITY\_PRINCIPAL\_SELF\_RID | S-1-5-10 | The PRINCIPAL\_SELF security identifier can be used in the ACL of a user or group object. During an access check, the system replaces the SID with the SID of the object. The PRINCIPAL\_SELF SID is useful for specifying an inheritable ACE that applies to the user or group object that inherits the ACE. It the only way of representing the SID of a created object in the default [_security descriptor_](https://docs.microsoft.com/en-us/windows/desktop/SecGloss/s-gly) of the schema. |
-| SECURITY\_AUTHENTICATED\_USER\_RID | S-1-5-11 | The authenticated users. |
+| SECURITY\_PRINCIPAL\_SELF\_RID | S-1-5-10 | 可以在用户或组对象的ACL中使用PRINCIPAL\_SELF安全标识符。在访问检查期间，系统将SID替换为对象的SID。PRINCIPAL\_SELF SID对于指定适用于继承该ACE的用户或组对象的可继承ACE很有用。这是在架构的默认_安全_描述_符_中表示创建的对象的SID的唯一方法。 |
+| SECURITY\_AUTHENTICATED\_USER\_RID | S-1-5-11 | 经过身份验证的用户。 |
 | SECURITY\_RESTRICTED\_CODE\_RID | S-1-5-12 | Restricted code. |
 | SECURITY\_TERMINAL\_SERVER\_RID | S-1-5-13 | Terminal Services. Automatically added to the security token of a user who logs on to a terminal server. |
-| SECURITY\_LOCAL\_SYSTEM\_RID | S-1-5-18 | A special account used by the operating system. |
+| SECURITY\_LOCAL\_SYSTEM\_RID | S-1-5-18 | 操作系统使用的特殊帐户。 |
 | SECURITY\_NT\_NON\_UNIQUE | S-1-5-21 | SIDS are not unique. |
 | SECURITY\_BUILTIN\_DOMAIN\_RID | S-1-5-32 | The built-in system domain. |
 | SECURITY\_WRITE\_RESTRICTED\_CODE\_RID | S-1-5-33 | Write restricted code. |
