@@ -15,4 +15,5 @@
 * [（二）ACE字符串](ace-strings.md)
 * [（三）SID字符串](sid-strings.md)
 * [3. 权限控制其他内容](quan-xian-kong-zhi-qi-ta-nei-rong.md)
+* [4. AD中的ACL](4.-ad-zhong-de-acl.md)
 
