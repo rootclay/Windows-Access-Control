@@ -1,12 +1,12 @@
 ---
-description: '本文刚开始写，慢慢写完再发布，不妥之处即使沟通。https://rootclay.gitbook.io/windows-access-control/'
+description: '本文刚开始写，慢慢写完再发布，不妥之处及时沟通。https://rootclay.gitbook.io/windows-access-control/'
 ---
 
 # Windows访问控制
 
 ## 介绍
 
-本文刚开始写，慢慢写完再发布，不妥之处即使沟通。
+本文刚开始写，慢慢写完再发布，不妥之处及时沟通
 
 **链接地址：**[**https://rootclay.gitbook.io/windows-access-control/**](https://rootclay.gitbook.io/windows-access-control/)\*\*\*\*
 
