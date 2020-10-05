@@ -2,15 +2,15 @@
 
 ## SID字符串
 
-在安全描述符定义语言（SDDL）中，安全描述符字符串将SID字符串用于安全描述符的以下组件：
+在安全描述符定义语言（SDDL）中，安全描述符字符串将SID字符串用于安全描述符的以下部分：
 
 * Owner
 * Primary group
 * The [trustee](https://docs.microsoft.com/zh-cn/windows/win32/secauthz/trustees) in an ACE
 
-安全描述符字符串中的SID字符串可以使用SID的标准字符串表示形式（S-R-I-S-S）或Sddl.h中定义的字符串常量之一。有关标准SID字符串表示法的更多信息，请参见SID组件。
+安全描述符字符串中的SID字符串可以使用SID的标准字符串表示形式（S-R-I-S-S）或Sddl.h中定义的字符串常量之一。
 
-在Sddl.h中定义了以下用于著名SID的SID字符串常量。有关相应的相对ID（RID）的信息，请参阅众所周知的SID。
+在Sddl.h中定义了以下用于常见SID的SID字符串常量。
 
 | SDDL SID 字符串 | Sddl.h 中的长度 | 帐户别名和相应的RID |
 | :--- | :--- | :--- |

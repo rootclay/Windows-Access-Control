@@ -4,9 +4,9 @@
 
 条件访问控制项（ACE）允许在执行访问检查时评估访问条件。安全描述符定义语言（SDDL）提供了用于以字符串格式定义条件ACE的语法。
 
-条件ACE的SDDL与任何ACE相同，条件语句的语法附加在ACE字符串的末尾。
+条件ACE的SDDL与其他ACE相同，条件语句的语法是写在ACE字符串的末尾。
 
-资源属性中的“＃”符号与“ 0”同义。例如，`D：AI（XA; OICI; FA ;;; WD;（OctetStringType ==＃1＃2＃3 ##））`等效并解释为`D：AI（XA; OICI; FA ;;; WD ;（OctetStringType ==＃01020300））`。
+资源属性中的“＃”符号与“ 0”同义。例如，`D:AI(XA; OICI; FA ;;; WD;(OctetStringType ==#1#2#3##))`等效并解释为`D:AI(XA; OICI; FA ;;; WD;(OctetStringType ==#01020300))`。
 
 ### **条件ACE字符串格式**
 
@@ -16,9 +16,9 @@ _AceType\*\*_;_**AceFlags**_;_**Rights**_;_**ObjectGuid**_;_**InheritObjectGuid*
 
 这些字段如ACE字符串中所述，但以下情况除外。
 
-* AceType字段可以是以下字符串之一。
+* AceType字段可以是以下字符串之一。（当然不止这些，更多可以参考ACE字符串章节）
 
-| ACE 类型的字符串 | Sddl.h中的字符串 | AceType 值 |
+| ACE 类型的字符串 | Sddl.h中的常量 | AceType 值 |
 | :--- | :--- | :--- |
 | "XA" | SDDL\_CALLBACK\_ACCESS\_ALLOWED | ACCESS\_ALLOWED\_CALLBACK\_ACE\_TYPE |
 | "XD" | SDDL\_CALLBACK\_ACCESS\_DENIED | ACCESS\_DENIED\_CALLBACK\_ACE\_TYPE |
@@ -39,7 +39,7 @@ _AceType\*\*_;_**AceFlags**_;_**Rights**_;_**ObjectGuid**_;_**InheritObjectGuid*
 | **!\(\**\*ConditionalExpression\*_\_\)\*\* | 条件表达式的逆函数。 |
 | **Member\_of{\**\*SidArray\*_\_}\*\* | 测试客户端上下文的`SID_AND_ATTRIBUTES`数组是否包含`SidArray`指定的逗号分隔列表中的所有安全标识符（SID）。 对于允许ACE，客户端上下文SID必须将`SE_GROUP_ENABLED`属性设置为被视为匹配项。 对于`Deny ACE`，客户端上下文SID必须将`SE_GROUP_ENABLED`或`SE_GROUP_USE_FOR_DENY_ONLY`属性设置为被视为匹配项。 `SidArray`数组可以包含SID字符串（例如“ S-1-5-6”）或SID别名（例如“ BA”） |
 
-**属性**
+### **属性**
 
 属性表示客户端上下文中`AUTHZ_SECURITY_ATTRIBUTES_INFORMATION`数组中的元素。属性名称可以包含任何字母数字字符和任何字符“：”，“ /”，“。”和“ \_”。
 
@@ -52,7 +52,7 @@ _AceType\*\*_;_**AceFlags**_;_**Rights**_;_**ObjectGuid**_;_**InheritObjectGuid*
 | SID | 必须位于Member\_of或Device\_Member\_of的RHS上。 |
 | BLOB | ＃后跟十六进制数字。如果数字的长度为奇数，则将＃转换为0使其变为偶数。同样，在值的其他位置出现的＃也将转换为0。 |
 
-**操作符**
+### **操作符**
 
 定义了以下运算符，供在条件表达式中使用以测试属性值。所有这些都是二进制运算符，并以`AttributeName`运算符值的形式使用。
 
@@ -69,7 +69,7 @@ _AceType\*\*_;_**AceFlags**_;_**Rights**_;_**ObjectGuid**_;_**InheritObjectGuid*
 
 此外，一元运算符Exists，Member\_of和negation（！）的定义如条件表达式表中所述。 “ Contains”运算符必须在空格之前和之后，而“ Any\_of”运算符必须在空格之前。
 
-**未知值**
+### Unknown
 
 条件表达式的结果有时返回值Unknown。例如，当指定的属性不存在时，任何关系操作都将返回“未知”。
 
@@ -103,7 +103,7 @@ _AceType\*\*_;_**AceFlags**_;_**Rights**_;_**ObjectGuid**_;_**InheritObjectGuid*
 
 值为`UNKNOWN`的条件表达式的否定也是`UNKNOWN`。
 
-**ACE条件评估**
+### **条件ACE评估**
 
 下表描述了根据条件表达式的最终评估得出的条件ACE的访问检查结果。
 
@@ -112,28 +112,26 @@ _AceType\*\*_;_**AceFlags**_;_**Rights**_;_**ObjectGuid**_;_**InheritObjectGuid*
 | Allow | Allow | Ignore ACE | Ignore ACE |
 | Deny | Deny | Ignore ACE | Deny |
 
-**案例：**
+### **案例**
 
-下面的示例说明如何通过使用SDDL定义的条件ACE来表示指定的访问策略。
+下面通过一些示例说明SDDL定义的条件ACE是如何来表示指定的访问策略。
 
 条件：如果同时满足以下两个条件，则允许对所有人执行
 
 * Title = PM
 * Division = Finance or Division = Sales
 
-SDDL:`D:(XA; ;FX;;;S-1-1-0; (@User.Title=="PM" && (@User.Division=="Finance" || @User.Division ==" Sales")))`
+SDDL:
+
+`D:(XA; ;FX;;;S-1-1-0; (@User.Title=="PM" && (@User.Division=="Finance" || @User.Division ==" Sales")))`
+
+
 
 条件: 如果任何用户项目与文件项目相交，则允许执行。
 
-SDDL：`D:(XA; ;FX;;;S-1-1-0; (@User.Project Any_of @Resource.Project))`
+SDDL：
 
-条件：如果用户已经使用智能卡登录，是备份操作员并且正在从启用了Bitlocker的计算机进行连接，则允许读取访问。
-
-SDDL:
-
-```text
-D:(XA; ;FR;;;S-1-1-0; (Member_of {SID(Smartcard_SID), SID(BO)} && @Device.Bitlocker))
-```
+`D:(XA; ;FX;;;S-1-1-0; (@User.Project Any_of @Resource.Project))`
 
 ## 
 

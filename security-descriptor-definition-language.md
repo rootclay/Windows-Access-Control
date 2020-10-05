@@ -65,7 +65,7 @@ c:\users\public\videos\desktop.ini
 ;ID;0x1301ff;;;S-1-5-3)
 ```
 
-O: SY代表该对象的Owner为System
+O: SY代表该对象的Owner为System（类似O这样的表达为SID表达的可以在SID字符串章节找到对应的参考信息）
 
 ![SYSTEM](.gitbook/assets/image%20%2810%29.png)
 
